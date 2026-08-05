@@ -12,7 +12,7 @@
     
     <!-- マナーモード解除のお願い -->
     <div style="background-color: #fff9e6; color: #8a6d3b; padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 20px; text-align: center; border: 1px dashed #f0c36d;">
-        🔔 お知らせ音を鳴らすため、マナーモード（サイレント）の解除と音量の調整をお願いいたします
+        🔔 お知らせ音を鳴らすため、マナーモード（サイレント）の解除と「メディア音量」を大きく設定してください
     </div>
 
     <!-- スタート時間設定 -->
@@ -37,7 +37,7 @@
 
     <!-- 計算実行ボタン -->
     <button type="button" id="calcBtn" style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; color: #ffffff; background-color: #e67e22; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(230,126,34,0.3);">
-        計算・タイマー開始<br>（終了10分前もアラームが鳴ります）
+        計算・タイマー開始
     </button>
 
     <!-- 結果表示エリア -->
@@ -70,7 +70,7 @@
         まもなく終了のお時間です
     </div>
     <div id="alarmModalMessage" style="font-size: 1rem; margin-bottom: 30px; color: #666; line-height: 1.5;">
-        お忘れ物はありませんか。
+        お忘れ物のないよう、少しずつご準備をお願いいたします。
     </div>
     <button type="button" id="stopBtn" style="width: 80%; max-width: 280px; padding: 16px; font-size: 1.1rem; font-weight: bold; color: #ffffff; background-color: #e67e22; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.3);">
         お知らせを止める
@@ -82,7 +82,7 @@
     let audioCtx = null;
     let alarmTimerInterval = null;
 
-    // 心地よい電子チャイム音を鳴らす関数
+    // 音声再生（はっきり届く重厚チャイム音）
     function playChime(type) {
         try {
             if (!audioCtx) {
@@ -94,35 +94,43 @@
 
             if (alarmTimerInterval) clearInterval(alarmTimerInterval);
 
-            // 音階の設定（和音で響くチャイム風）
-            const notes = type === '10min' ? [523.25, 659.25] : [659.25, 783.99, 1046.50]; // ミ・ソ・ドなどの和音
+            // 音階の設定（低音と高音を混ぜて遠くまで響かせる）
+            const notes = type === '10min' 
+                ? [261.63, 523.25, 659.25, 783.99] // ド・ド・ミ・ソ（重厚で通る音）
+                : [329.63, 659.25, 783.99, 1046.50]; // ミ・ミ・ソ・ド
 
             function playSound() {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 
                 notes.forEach((freq, index) => {
-                    const startTime = audioCtx.currentTime + (index * 0.15);
+                    const startTime = audioCtx.currentTime + (index * 0.12);
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
 
-                    osc.type = 'sine'; // まろやかな正弦波
+                    // クッキリ聴こえる三角波（Triangle）を使用
+                    osc.type = 'triangle'; 
                     osc.frequency.setValueAtTime(freq, startTime);
 
-                    // 音量設定（優しく広がる）
+                    // Web上の最大音量設定（1.0）
                     gain.gain.setValueAtTime(0, startTime);
-                    gain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
-                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+                    gain.gain.linearRampToValueAtTime(1.0, startTime + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.9);
 
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
 
                     osc.start(startTime);
-                    osc.stop(startTime + 0.8);
+                    osc.stop(startTime + 0.9);
                 });
+
+                // バイブレーション（Android等で動作可能な場合のみ作動）
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([200, 100, 200]);
+                }
             }
 
             playSound();
-            alarmTimerInterval = setInterval(playSound, 2500); // 2.5秒ごとに優しく鳴らす
+            alarmTimerInterval = setInterval(playSound, 2000); // 2秒ごとに繰り返し
 
         } catch(e) {
             console.log("Audio not allowed", e);
