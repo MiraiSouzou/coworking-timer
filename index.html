@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>退室時間のご案内</title>
+    <title>退室時間のご案内（アラーム機能付）</title>
 </head>
-<body style="background-color: #f5f5f5; margin: 0; padding: 10px;">
+<body style="background-color: #f5f5f5; margin: 0; padding: 10px; font-family: sans-serif;">
 
 <div style="max-width: 450px; margin: 20px auto; padding: 20px; font-family: sans-serif; border: 1px solid #e0e0e0; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: #ffffff; color: #333333; box-sizing: border-box;">
     <h2 style="text-align: center; color: #2c3e50; font-size: 1.4rem; margin-top: 0; margin-bottom: 20px;">退室時間・料金計算</h2>
     
+    <!-- マナーモード解除のお願い -->
+    <div style="background-color: #ffeaa7; color: #d63031; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; margin-bottom: 15px; text-align: center; border: 1px solid #fab1a0;">
+        ⚠️必ずマナーモード（サイレント）を解除し、メディア音量を上げてください
+    </div>
+
     <!-- スタート時間設定 -->
     <div style="margin-bottom: 15px;">
         <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem;">入室時間（スタート時間）</label>
@@ -31,7 +36,7 @@
     </div>
 
     <!-- 計算実行ボタン -->
-    <button type="button" id="calcBtn" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: bold; color: #ffffff; background-color: #007bff; border: none; border-radius: 6px; cursor: pointer;">
+    <button type="button" id="calcBtn" style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; color: #ffffff; background-color: #007bff; border: none; border-radius: 6px; cursor: pointer;">
         計算・タイマー開始
     </button>
 
@@ -39,31 +44,69 @@
     <div id="resultArea" style="display: none; margin-top: 25px; padding-top: 20px; border-top: 2px dashed #eee; text-align: center;">
         <div style="margin-bottom: 10px;">
             <span style="font-size: 0.9rem; color: #666;">退室予定時刻</span>
-            <div id="checkoutTime" style="font-size: 2rem; font-weight: bold; color: #d9534f;">--:--</div>
+            <div id="checkoutTime" style="font-size: 2.5rem; font-weight: bold; color: #d9534f;">--:--</div>
         </div>
 
         <div style="margin-bottom: 15px;">
             <span style="font-size: 0.9rem; color: #666;">概算ご利用料金（税込）</span>
-            <div id="totalPrice" style="font-size: 1.4rem; font-weight: bold; color: #2c3e50;">--円</div>
+            <div id="totalPrice" style="font-size: 1.6rem; font-weight: bold; color: #2c3e50;">--円</div>
         </div>
 
         <!-- カウントダウンタイマー -->
         <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px;">
             <span style="font-size: 0.85rem; color: #666;">退室までの残り時間</span>
-            <div id="timerDisplay" style="font-size: 1.8rem; font-weight: bold; color: #28a745; margin-top: 5px;">--分--秒</div>
-            <div id="alertNotice" style="font-size: 0.85rem; color: #e67e22; margin-top: 5px; font-weight: bold; display: none;">
+            <div id="timerDisplay" style="font-size: 2.2rem; font-weight: bold; color: #28a745; margin-top: 5px;">--分--秒</div>
+            <div id="alertNotice" style="font-size: 1rem; color: #e67e22; margin-top: 5px; font-weight: bold; display: none;">
                 ⚠️ 終了10分前になりました
             </div>
         </div>
     </div>
 </div>
 
+<!-- アラーム全画面警告モーダル (初期は非表示) -->
+<div id="alarmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; color: #ffffff; padding: 20px; box-sizing: border-box; text-align: center;">
+    <div id="alarmModalTitle" style="font-size: 2.5rem; font-weight: bold; margin-bottom: 20px; line-height: 1.2;">
+        アラーム作動中
+    </div>
+    <div id="alarmModalMessage" style="font-size: 1.2rem; margin-bottom: 40px;">
+        10分前になりました
+    </div>
+    <!-- 激しく点滅するボタン -->
+    <button type="button" id="stopBtn" class="flash-btn">
+        アラームを止める
+    </button>
+</div>
+
+<style>
+    /* アラーム停止ボタンの点滅アニメーション */
+    .flash-btn {
+        width: 100%;
+        max-width: 300px;
+        padding: 20px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #ffffff;
+        background-color: #d63031;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        animation: flashing 0.8s infinite;
+        box-shadow: 0 0 20px rgba(214, 48, 49, 0.8);
+    }
+    @keyframes flashing {
+        0% { background-color: #d63031; opacity: 1; transform: scale(1.0); }
+        50% { background-color: #e17055; opacity: 0.7; transform: scale(1.05); }
+        100% { background-color: #d63031; opacity: 1; transform: scale(1.0); }
+    }
+</style>
+
 <script>
 (function() {
     let audioCtx = null;
+    let alarmTimerInterval = null; // アラーム音用のタイマー
 
-    // 音を鳴らす関数
-    function playBeep(freq, count, interval) {
+    // アラーム音を鳴らし続ける関数
+    function startAlarmLoop(type) {
         try {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -72,29 +115,91 @@
                 audioCtx.resume();
             }
 
-            for (let i = 0; i < count; i++) {
-                const startTime = audioCtx.currentTime + (i * interval);
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+            // すでにアラームが鳴っている場合は一度リセット
+            if (alarmTimerInterval) clearInterval(alarmTimerInterval);
 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, startTime);
-
-                gain.gain.setValueAtTime(0, startTime);
-                gain.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
-                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
-
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-
-                osc.start(startTime);
-                osc.stop(startTime + 0.25);
+            // 音の設定
+            let freq, count, interval;
+            if (type === '10min') {
+                // 10分前：少し高い音で「ピピピッ、ピピピッ」 (明るめ)
+                freq = 932.33; // A#5
+                count = 3;
+                interval = 0.2;
+            } else {
+                // 終了時：低めの音で「ピー、ピー、ピー」 (警告感)
+                freq = 523.25; // C5
+                count = 1;
+                interval = 0.5; // 0.5秒鳴らして0.5秒休むを繰り返す
             }
+
+            function playSingleBeep() {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                for (let i = 0; i < count; i++) {
+                    const startTime = audioCtx.currentTime + (i * interval);
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sine'; // 正弦波
+                    osc.frequency.setValueAtTime(freq, startTime);
+
+                    // 音量設定（最大）
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.linearRampToValueAtTime(0.5, startTime + 0.02); // 急激に立ち上げ
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + interval); // じわっと消す
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(startTime);
+                    osc.stop(startTime + interval);
+                }
+            }
+
+            // ループ開始 (1.5秒ごとにplaySingleBeepを呼び出す)
+            playSingleBeep(); // 初回
+            alarmTimerInterval = setInterval(playSingleBeep, 1500); 
+
         } catch(e) {
             console.log("Audio not allowed", e);
         }
     }
 
+    // アラーム音を止める関数
+    function stopAlarmLoop() {
+        if (alarmTimerInterval) {
+            clearInterval(alarmTimerInterval);
+            alarmTimerInterval = null;
+        }
+    }
+
+    // 画面告知（モーダル）を表示する関数
+    function showAlarmModal(type) {
+        const modal = document.getElementById('alarmModal');
+        const title = document.getElementById('alarmModalTitle');
+        const message = document.getElementById('alarmModalMessage');
+
+        if (type === '10min') {
+            title.innerText = '⚠️10分前';
+            message.innerText = 'まもなく退室のお時間です。';
+            title.style.color = '#e67e22'; // オレンジ
+            startAlarmLoop('10min');
+        } else {
+            title.innerText = '🚨退室時間です';
+            message.innerText = 'お忘れ物のないよう、ご準備をお願いします。';
+            title.style.color = '#d9534f'; // 赤
+            startAlarmLoop('end');
+        }
+        modal.style.display = 'flex';
+    }
+
+    // モーダルを閉じてアラームを止める
+    document.getElementById('stopBtn').onclick = function() {
+        document.getElementById('alarmModal').style.display = 'none';
+        stopAlarmLoop();
+    };
+
+    // アプリ初期化
     function initTimerApp() {
         const startTimeInput = document.getElementById('startTime');
         const calcBtn = document.getElementById('calcBtn');
@@ -110,7 +215,7 @@
         let hasAlertedEnd = false;
 
         calcBtn.onclick = function() {
-            // ボタンを押したタイミングでオーディオを準備（スマホの自動再生ブロック対策）
+            // ボタンを押したタイミングでオーディオを準備（スマホ対策）
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
@@ -162,8 +267,8 @@
 
                     if (!hasAlertedEnd) {
                         hasAlertedEnd = true;
-                        // 終了時の音（少し低めの音で「ピー・ピー・ピー・ピー」と4回）
-                        playBeep(523.25, 4, 0.4);
+                        // 終了時の全画面警告
+                        showAlarmModal('end');
                     }
                     return;
                 }
@@ -180,8 +285,8 @@
 
                     if (!hasAlerted10Min) {
                         hasAlerted10Min = true;
-                        // 10分前の音（高い音で「ピピッ・ピピッ・ピピッ」と3回）
-                        playBeep(880, 3, 0.2);
+                        // 10分前の全画面警告
+                        showAlarmModal('10min');
                     }
                 } else {
                     timerDisplay.style.color = "#28a745";
@@ -194,6 +299,7 @@
         };
     }
 
+    // ドキュメント読み込み完了時に実行
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initTimerApp);
     } else {
