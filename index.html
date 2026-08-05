@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -61,6 +60,41 @@
 
 <script>
 (function() {
+    let audioCtx = null;
+
+    // 音を鳴らす関数
+    function playBeep(freq, count, interval) {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            for (let i = 0; i < count; i++) {
+                const startTime = audioCtx.currentTime + (i * interval);
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, startTime);
+
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + 0.25);
+            }
+        } catch(e) {
+            console.log("Audio not allowed", e);
+        }
+    }
+
     function initTimerApp() {
         const startTimeInput = document.getElementById('startTime');
         const calcBtn = document.getElementById('calcBtn');
@@ -72,8 +106,18 @@
         startTimeInput.value = hours + ':' + minutes;
 
         let timerInterval = null;
+        let hasAlerted10Min = false;
+        let hasAlertedEnd = false;
 
         calcBtn.onclick = function() {
+            // ボタンを押したタイミングでオーディオを準備（スマホの自動再生ブロック対策）
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
             const startTimeValue = startTimeInput.value;
             if (!startTimeValue) {
                 alert('入室時間を設定してください。');
@@ -100,6 +144,8 @@
             document.getElementById('resultArea').style.display = 'block';
 
             if (timerInterval) clearInterval(timerInterval);
+            hasAlerted10Min = false;
+            hasAlertedEnd = false;
 
             function updateTimer() {
                 const current = new Date();
@@ -110,9 +156,15 @@
 
                 if (diffMs <= 0) {
                     clearInterval(timerInterval);
-                    timerDisplay.innerText = "ご利用時間を終了しました";
+                    timerDisplay.innerText = "退室時間です";
                     timerDisplay.style.color = "#d9534f";
                     alertNotice.style.display = "none";
+
+                    if (!hasAlertedEnd) {
+                        hasAlertedEnd = true;
+                        // 終了時の音（少し低めの音で「ピー・ピー・ピー・ピー」と4回）
+                        playBeep(523.25, 4, 0.4);
+                    }
                     return;
                 }
 
@@ -125,6 +177,12 @@
                 if (totalSeconds <= 600) {
                     timerDisplay.style.color = "#e67e22";
                     alertNotice.style.display = "block";
+
+                    if (!hasAlerted10Min) {
+                        hasAlerted10Min = true;
+                        // 10分前の音（高い音で「ピピッ・ピピッ・ピピッ」と3回）
+                        playBeep(880, 3, 0.2);
+                    }
                 } else {
                     timerDisplay.style.color = "#28a745";
                     alertNotice.style.display = "none";
