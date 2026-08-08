@@ -10,9 +10,12 @@
 <div style="max-width: 450px; margin: 20px auto; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); background-color: #ffffff; color: #4a4a4a; box-sizing: border-box; border: 1px solid #f0e6d2;">
     <h2 style="text-align: center; color: #6b4c35; font-size: 1.4rem; margin-top: 0; margin-bottom: 20px;">退室時間・料金のご案内</h2>
     
-    <!-- マナーモード解除のお願い -->
-    <div style="background-color: #fff9e6; color: #8a6d3b; padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 20px; text-align: center; border: 1px dashed #f0c36d;">
-        🔔 お知らせ音を鳴らすため、マナーモード（サイレント）の解除と「メディア音量」を大きく設定してください
+    <!-- マナーモード解除のお願い ＆ テストボタン -->
+    <div style="background-color: #fff9e6; color: #8a6d3b; padding: 12px 15px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 20px; text-align: center; border: 1px dashed #f0c36d;">
+        <div style="margin-bottom: 8px;">🔔 お知らせ音を鳴らすため、マナーモード（サイレント）の解除をお願いいたします</div>
+        <button type="button" id="testSoundBtn" style="background-color: #f39c12; color: #ffffff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(243,156,18,0.3);">
+            🔊 音のテスト（タップして確認）
+        </button>
     </div>
 
     <!-- スタート時間設定 -->
@@ -63,17 +66,17 @@
     </div>
 </div>
 
-<!-- 全画面モーダル (初期非表示) -->
+<!-- アラーム・テスト共有全画面モーダル (初期非表示) -->
 <div id="alarmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 252, 248, 0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; color: #4a4a4a; padding: 20px; box-sizing: border-box; text-align: center;">
-    <div id="alarmModalIcon" style="font-size: 3.5rem; margin-bottom: 10px;">☕️</div>
+    <div id="alarmModalIcon" style="font-size: 3.5rem; margin-bottom: 10px;">🔊</div>
     <div id="alarmModalTitle" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 15px; color: #6b4c35;">
-        まもなく終了のお時間です
+        音のテスト中
     </div>
     <div id="alarmModalMessage" style="font-size: 1rem; margin-bottom: 30px; color: #666; line-height: 1.5;">
-        お忘れ物のないよう、少しずつご準備をお願いいたします。
+        テスト音が鳴っています。<br>しっかり聞こえる程度まで端末の音量を上げてください。
     </div>
     <button type="button" id="stopBtn" style="width: 80%; max-width: 280px; padding: 16px; font-size: 1.1rem; font-weight: bold; color: #ffffff; background-color: #e67e22; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.3);">
-        お知らせを止める
+        テストを終了する
     </button>
 </div>
 
@@ -82,7 +85,7 @@
     let audioCtx = null;
     let alarmTimerInterval = null;
 
-    // 音声再生（はっきり届く重厚チャイム音）
+    // チャイム音再生関数
     function playChime(type) {
         try {
             if (!audioCtx) {
@@ -94,9 +97,8 @@
 
             if (alarmTimerInterval) clearInterval(alarmTimerInterval);
 
-            // 音階の設定（低音と高音を混ぜて遠くまで響かせる）
             const notes = type === '10min' 
-                ? [261.63, 523.25, 659.25, 783.99] // ド・ド・ミ・ソ（重厚で通る音）
+                ? [261.63, 523.25, 659.25, 783.99] // ド・ド・ミ・ソ
                 : [329.63, 659.25, 783.99, 1046.50]; // ミ・ミ・ソ・ド
 
             function playSound() {
@@ -107,11 +109,9 @@
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
 
-                    // クッキリ聴こえる三角波（Triangle）を使用
                     osc.type = 'triangle'; 
                     osc.frequency.setValueAtTime(freq, startTime);
 
-                    // Web上の最大音量設定（1.0）
                     gain.gain.setValueAtTime(0, startTime);
                     gain.gain.linearRampToValueAtTime(1.0, startTime + 0.02);
                     gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.9);
@@ -123,14 +123,13 @@
                     osc.stop(startTime + 0.9);
                 });
 
-                // バイブレーション（Android等で動作可能な場合のみ作動）
                 if ('vibrate' in navigator) {
                     navigator.vibrate([200, 100, 200]);
                 }
             }
 
             playSound();
-            alarmTimerInterval = setInterval(playSound, 2000); // 2秒ごとに繰り返し
+            alarmTimerInterval = setInterval(playSound, 2000);
 
         } catch(e) {
             console.log("Audio not allowed", e);
@@ -149,21 +148,36 @@
         const icon = document.getElementById('alarmModalIcon');
         const title = document.getElementById('alarmModalTitle');
         const message = document.getElementById('alarmModalMessage');
+        const stopBtn = document.getElementById('stopBtn');
 
-        if (type === '10min') {
+        if (type === 'test') {
+            icon.innerText = '🔊';
+            title.innerText = '音のテスト中';
+            message.innerHTML = 'テスト音が鳴っています。<br><strong style="color:#d35400;">しっかり聞こえる程度まで端末の音量を上げてください。</strong>';
+            stopBtn.innerText = 'テストを終了する';
+            playChime('10min');
+        } else if (type === '10min') {
             icon.innerText = '☕️';
             title.innerText = 'まもなくお時間です';
-            message.innerText = '終了10分前になりました。\nお忘れ物のないよう、少しずつご準備をおすすめいたします。';
+            message.innerHTML = '終了10分前になりました。<br>お忘れ物のないよう、少しずつご準備をおすすめいたします。';
+            stopBtn.innerText = 'お知らせを止める';
             playChime('10min');
         } else {
             icon.innerText = '✨';
             title.innerText = 'ご利用ありがとうございました';
-            message.innerText = '予定の退室時間となりました。\n本日のご来店、誠にありがとうございました。';
+            message.innerHTML = '予定の退室時間となりました。<br>本日のご来店、誠にありがとうございました。';
+            stopBtn.innerText = 'お知らせを止める';
             playChime('end');
         }
         modal.style.display = 'flex';
     }
 
+    // テストボタン動作
+    document.getElementById('testSoundBtn').onclick = function() {
+        showAlarmModal('test');
+    };
+
+    // モーダル閉じるボタン動作
     document.getElementById('stopBtn').onclick = function() {
         document.getElementById('alarmModal').style.display = 'none';
         stopAlarmLoop();
