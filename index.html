@@ -45,7 +45,7 @@
                 <option value="180|550">ステイプラン：3時間 (550円)</option>
                 <option value="210|660">3時間半 (660円)</option>
                 <option value="240|770">4時間 (770円)</option>
-                <option value="241|880">1day（4時間超） (880円)</option>
+                <option value="1day|880">1day（4時間超） (880円)</option>
             </select>
         </div>
 
@@ -318,13 +318,25 @@
             if (!startTimeValue) return alert('入室時間を設定してください。');
 
             const planVal = document.getElementById('planSelect').value.split('|');
-            const selectedMinutes = parseInt(planVal[0], 10);
+            const planType = planVal[0];
             const price = parseInt(planVal[1], 10);
 
             const timeParts = startTimeValue.split(':');
             const nowDate = new Date();
             const startDateTime = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), parseInt(timeParts[0], 10), parseInt(timeParts[1], 10), 0);
-            const checkoutDateTime = new Date(startDateTime.getTime() + selectedMinutes * 60000);
+            
+            let checkoutDateTime;
+            if (planType === '1day') {
+                // 1dayプランは同日の22:00固定
+                checkoutDateTime = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), 22, 0, 0);
+                // もし現在時刻がすでに22時を過ぎている場合は翌日の22:00とする
+                if (checkoutDateTime <= nowDate) {
+                    checkoutDateTime.setDate(checkoutDateTime.getDate() + 1);
+                }
+            } else {
+                const selectedMinutes = parseInt(planType, 10);
+                checkoutDateTime = new Date(startDateTime.getTime() + selectedMinutes * 60000);
+            }
 
             document.getElementById('checkoutTime').innerText = String(checkoutDateTime.getHours()).padStart(2, '0') + ':' + String(checkoutDateTime.getMinutes()).padStart(2, '0');
             document.getElementById('totalPrice').innerText = price.toLocaleString() + '円';
