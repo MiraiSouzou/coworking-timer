@@ -86,9 +86,13 @@
         </button>
 
         <div id="resultAreaCustom" style="display: none; margin-top: 25px; padding-top: 20px; border-top: 2px dashed #a8d1e7; text-align: center;">
-            <div style="margin-bottom: 15px;">
+            <div style="margin-bottom: 10px;">
                 <span style="font-size: 0.9rem; color: #666;">設定中の退室時刻</span>
                 <div id="customTargetTimeDisplay" style="font-size: 2.3rem; font-weight: bold; color: #2980b9;">--:--</div>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <span style="font-size: 0.9rem; color: #666;">利用料金見積</span>
+                <div id="customEstimatedPrice" style="font-size: 1.5rem; font-weight: bold; color: #4a4a4a;">--円</div>
             </div>
             <div style="background-color: #f0f7fc; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #cce3f0;">
                 <span style="font-size: 0.85rem; color: #666;">退室までの残り時間</span>
@@ -242,6 +246,25 @@
         tabPlanBtn.style.color = '#8a6d3b';
     };
 
+    // 滞在分数から概算料金を算出する関数
+    function calculatePriceByMinutes(durationMinutes) {
+        if (durationMinutes <= 30) {
+            return 165;
+        } else if (durationMinutes <= 60) {
+            return 275;
+        } else if (durationMinutes <= 120) {
+            return 495;
+        } else if (durationMinutes <= 180) {
+            return 550;
+        } else if (durationMinutes <= 210) {
+            return 660;
+        } else if (durationMinutes <= 240) {
+            return 770;
+        } else {
+            return 880; // 4時間超（1day上限）
+        }
+    }
+
     function initTimerApp() {
         const startTimeInput = document.getElementById('startTime');
         const customEndTimeInput = document.getElementById('customEndTime');
@@ -327,9 +350,7 @@
             
             let checkoutDateTime;
             if (planType === '1day') {
-                // 1dayプランは同日の22:00固定
                 checkoutDateTime = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), 22, 0, 0);
-                // もし現在時刻がすでに22時を過ぎている場合は翌日の22:00とする
                 if (checkoutDateTime <= nowDate) {
                     checkoutDateTime.setDate(checkoutDateTime.getDate() + 1);
                 }
@@ -354,16 +375,26 @@
             const customTimeVal = customEndTimeInput.value;
             if (!customTimeVal) return alert('退室時間を設定してください。');
 
-            const timeParts = customTimeVal.split(':');
+            const startTimeValue = startTimeInput.value || (String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'));
+            const startParts = startTimeValue.split(':');
+            
             const nowDate = new Date();
-            let checkoutDateTime = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), parseInt(timeParts[0], 10), parseInt(timeParts[1], 10), 0);
+            const startDateTime = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), parseInt(startParts[0], 10), parseInt(startParts[1], 10), 0);
 
-            // 設定時刻が現在より過去の場合、翌日の時刻と判断
-            if (checkoutDateTime <= nowDate) {
+            const endParts = customTimeVal.split(':');
+            let checkoutDateTime = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), parseInt(endParts[0], 10), parseInt(endParts[1], 10), 0);
+
+            // 設定時刻が開始時刻より過去の場合、翌日の時刻と判断
+            if (checkoutDateTime <= startDateTime) {
                 checkoutDateTime.setDate(checkoutDateTime.getDate() + 1);
             }
 
+            // 滞在分数（分単位）を計算して見積もり料金を算出
+            const durationMinutes = Math.ceil((checkoutDateTime - startDateTime) / (1000 * 60));
+            const estimatedPrice = calculatePriceByMinutes(durationMinutes);
+
             document.getElementById('customTargetTimeDisplay').innerText = String(checkoutDateTime.getHours()).padStart(2, '0') + ':' + String(checkoutDateTime.getMinutes()).padStart(2, '0');
+            document.getElementById('customEstimatedPrice').innerText = estimatedPrice.toLocaleString() + '円';
 
             startTimerSequence(
                 checkoutDateTime, 
