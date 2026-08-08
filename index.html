@@ -7,63 +7,99 @@
 </head>
 <body style="background-color: #fcf8f2; margin: 0; padding: 10px; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;">
 
-<div style="max-width: 450px; margin: 20px auto; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); background-color: #ffffff; color: #4a4a4a; box-sizing: border-box; border: 1px solid #f0e6d2;">
-    <h2 style="text-align: center; color: #6b4c35; font-size: 1.4rem; margin-top: 0; margin-bottom: 20px;">退室時間・料金のご案内</h2>
+<div style="max-width: 450px; margin: 20px auto; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); background-color: #ffffff; color: #4a4a4a; box-sizing: border-box; border: 1px solid #f0e6d2;">
+
+    <!-- タブ切り替えボタン -->
+    <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+        <button type="button" id="tabPlanBtn" style="flex: 1; padding: 12px 5px; font-size: 0.95rem; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; background-color: #e67e22; color: #ffffff; transition: 0.3s;">
+            📋 プラン計算
+        </button>
+        <button type="button" id="tabCustomBtn" style="flex: 1; padding: 12px 5px; font-size: 0.95rem; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; background-color: #eef5f9; color: #5a738e; transition: 0.3s;">
+            ⏰ 任意時刻で設定
+        </button>
+    </div>
     
     <!-- マナーモード解除のお願い ＆ テストボタン -->
     <div style="background-color: #fff9e6; color: #8a6d3b; padding: 12px 15px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 20px; text-align: center; border: 1px dashed #f0c36d;">
         <div style="margin-bottom: 8px;">🔔 お知らせ音を鳴らすため、マナーモード（サイレント）の解除をお願いいたします</div>
         <button type="button" id="testSoundBtn" style="background-color: #f39c12; color: #ffffff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(243,156,18,0.3);">
-            🔊 お知らせ音テスト（タップして確認）
+            🔊 音のテスト（タップして確認）
         </button>
     </div>
 
-    <!-- スタート時間設定 -->
-    <div style="margin-bottom: 15px;">
-        <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #6b4c35;">入室時間（スタート時間）</label>
-        <input type="time" id="startTime" style="width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #e0d0b8; border-radius: 8px; box-sizing: border-box; background-color: #faf8f5;">
-    </div>
-
-    <!-- プラン選択 -->
-    <div style="margin-bottom: 20px;">
-        <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #6b4c35;">ご利用プラン</label>
-        <select id="planSelect" style="width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #e0d0b8; border-radius: 8px; box-sizing: border-box; background-color: #faf8f5;">
-            <option value="30|165">ショートプラン：最初30分 (165円)</option>
-            <option value="60|275">1時間 (275円)</option>
-            <option value="120|495">2時間 (495円)</option>
-            <option value="180|550">ステイプラン：3時間 (550円)</option>
-            <option value="210|660">3時間半 (660円)</option>
-            <option value="240|770">4時間 (770円)</option>
-            <option value="241|880">1day（4時間超） (880円)</option>
-        </select>
-    </div>
-
-    <!-- 計算実行ボタン -->
-    <button type="button" id="calcBtn" style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; color: #ffffff; background-color: #e67e22; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(230,126,34,0.3);">
-        計算・タイマー開始
-    </button>
-
-    <!-- 結果表示エリア -->
-    <div id="resultArea" style="display: none; margin-top: 25px; padding-top: 20px; border-top: 2px dashed #f0e6d2; text-align: center;">
-        <div style="margin-bottom: 10px;">
-            <span style="font-size: 0.9rem; color: #888;">退室予定時刻</span>
-            <div id="checkoutTime" style="font-size: 2.3rem; font-weight: bold; color: #d35400;">--:--</div>
-        </div>
+    <!-- ==================== タブ1: プラン計算 ==================== -->
+    <div id="tabPlanContent">
+        <h2 style="text-align: center; color: #6b4c35; font-size: 1.3rem; margin-top: 0; margin-bottom: 15px;">退室時間・料金のご案内</h2>
 
         <div style="margin-bottom: 15px;">
-            <span style="font-size: 0.9rem; color: #888;">概算ご利用料金（税込）</span>
-            <div id="totalPrice" style="font-size: 1.5rem; font-weight: bold; color: #4a4a4a;">--円</div>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #6b4c35;">入室時間（スタート時間）</label>
+            <input type="time" id="startTime" style="width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #e0d0b8; border-radius: 8px; box-sizing: border-box; background-color: #faf8f5;">
         </div>
 
-        <!-- カウントダウンタイマー -->
-        <div style="background-color: #faf8f5; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #f0e6d2;">
-            <span style="font-size: 0.85rem; color: #888;">退室までの残り時間</span>
-            <div id="timerDisplay" style="font-size: 2.2rem; font-weight: bold; color: #27ae60; margin-top: 5px;">--分--秒</div>
-            <div id="alertNotice" style="font-size: 0.95rem; color: #e67e22; margin-top: 5px; font-weight: bold; display: none;">
-                ☕️ まもなくお時間です
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #6b4c35;">ご利用プラン</label>
+            <select id="planSelect" style="width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #e0d0b8; border-radius: 8px; box-sizing: border-box; background-color: #faf8f5;">
+                <option value="30|165">ショートプラン：最初30分 (165円)</option>
+                <option value="60|275">1時間 (275円)</option>
+                <option value="120|495">2時間 (495円)</option>
+                <option value="180|550">ステイプラン：3時間 (550円)</option>
+                <option value="210|660">3時間半 (660円)</option>
+                <option value="240|770">4時間 (770円)</option>
+                <option value="241|880">1day（4時間超） (880円)</option>
+            </select>
+        </div>
+
+        <button type="button" id="calcBtn" style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; color: #ffffff; background-color: #e67e22; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(230,126,34,0.3);">
+            計算・タイマー開始
+        </button>
+
+        <div id="resultAreaPlan" style="display: none; margin-top: 25px; padding-top: 20px; border-top: 2px dashed #f0e6d2; text-align: center;">
+            <div style="margin-bottom: 10px;">
+                <span style="font-size: 0.9rem; color: #888;">退室予定時刻</span>
+                <div id="checkoutTime" style="font-size: 2.3rem; font-weight: bold; color: #d35400;">--:--</div>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <span style="font-size: 0.9rem; color: #888;">概算ご利用料金（税込）</span>
+                <div id="totalPrice" style="font-size: 1.5rem; font-weight: bold; color: #4a4a4a;">--円</div>
+            </div>
+            <div style="background-color: #faf8f5; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #f0e6d2;">
+                <span style="font-size: 0.85rem; color: #888;">退室までの残り時間</span>
+                <div id="timerDisplayPlan" style="font-size: 2.2rem; font-weight: bold; color: #27ae60; margin-top: 5px;">--分--秒</div>
+                <div id="alertNoticePlan" style="font-size: 0.95rem; color: #e67e22; margin-top: 5px; font-weight: bold; display: none;">
+                    ☕️ まもなくお時間です
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- ==================== タブ2: 任意時刻設定 ==================== -->
+    <div id="tabCustomContent" style="display: none;">
+        <h2 style="text-align: center; color: #2c3e50; font-size: 1.3rem; margin-top: 0; margin-bottom: 15px;">任意の終了時刻を設定</h2>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #34495e;">退室したい時刻（終了時間）</label>
+            <input type="time" id="customEndTime" style="width: 100%; padding: 12px; font-size: 1.2rem; text-align: center; font-weight: bold; border: 2px solid #a8d1e7; border-radius: 8px; box-sizing: border-box; background-color: #f0f7fc; color: #2c3e50;">
+        </div>
+
+        <button type="button" id="startCustomBtn" style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; color: #ffffff; background-color: #2980b9; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(41,128,185,0.3);">
+            タイマー開始
+        </button>
+
+        <div id="resultAreaCustom" style="display: none; margin-top: 25px; padding-top: 20px; border-top: 2px dashed #a8d1e7; text-align: center;">
+            <div style="margin-bottom: 15px;">
+                <span style="font-size: 0.9rem; color: #666;">設定中の退室時刻</span>
+                <div id="customTargetTimeDisplay" style="font-size: 2.3rem; font-weight: bold; color: #2980b9;">--:--</div>
+            </div>
+            <div style="background-color: #f0f7fc; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #cce3f0;">
+                <span style="font-size: 0.85rem; color: #666;">退室までの残り時間</span>
+                <div id="timerDisplayCustom" style="font-size: 2.2rem; font-weight: bold; color: #27ae60; margin-top: 5px;">--分--秒</div>
+                <div id="alertNoticeCustom" style="font-size: 0.95rem; color: #e67e22; margin-top: 5px; font-weight: bold; display: none;">
+                    ☕️ まもなくお時間です
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- アラーム・テスト共有全画面モーダル (初期非表示) -->
@@ -73,7 +109,7 @@
         音のテスト中
     </div>
     <div id="alarmModalMessage" style="font-size: 1rem; margin-bottom: 30px; color: #666; line-height: 1.5;">
-        テスト音が鳴っています。<br>聞こえる程度まで端末の音量を上げてください。
+        テスト音が鳴っています。<br>しっかり聞こえる程度まで端末の音量を上げてください。
     </div>
     <button type="button" id="stopBtn" style="width: 80%; max-width: 280px; padding: 16px; font-size: 1.1rem; font-weight: bold; color: #ffffff; background-color: #e67e22; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.3);">
         テストを終了する
@@ -84,8 +120,9 @@
 (function() {
     let audioCtx = null;
     let alarmTimerInterval = null;
+    let timerInterval = null;
 
-    // チャイム音再生関数
+    // 音声再生
     function playChime(type) {
         try {
             if (!audioCtx) {
@@ -98,8 +135,8 @@
             if (alarmTimerInterval) clearInterval(alarmTimerInterval);
 
             const notes = type === '10min' 
-                ? [261.63, 523.25, 659.25, 783.99] // ド・ド・ミ・ソ
-                : [329.63, 659.25, 783.99, 1046.50]; // ミ・ミ・ソ・ド
+                ? [261.63, 523.25, 659.25, 783.99]
+                : [329.63, 659.25, 783.99, 1046.50];
 
             function playSound() {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -172,63 +209,63 @@
         modal.style.display = 'flex';
     }
 
-    // テストボタン動作
     document.getElementById('testSoundBtn').onclick = function() {
         showAlarmModal('test');
     };
 
-    // モーダル閉じるボタン動作
     document.getElementById('stopBtn').onclick = function() {
         document.getElementById('alarmModal').style.display = 'none';
         stopAlarmLoop();
     };
 
+    // タブ切り替え制御
+    const tabPlanBtn = document.getElementById('tabPlanBtn');
+    const tabCustomBtn = document.getElementById('tabCustomBtn');
+    const tabPlanContent = document.getElementById('tabPlanContent');
+    const tabCustomContent = document.getElementById('tabCustomContent');
+
+    tabPlanBtn.onclick = function() {
+        tabPlanContent.style.display = 'block';
+        tabCustomContent.style.display = 'none';
+        tabPlanBtn.style.backgroundColor = '#e67e22';
+        tabPlanBtn.style.color = '#ffffff';
+        tabCustomBtn.style.backgroundColor = '#eef5f9';
+        tabCustomBtn.style.color = '#5a738e';
+    };
+
+    tabCustomBtn.onclick = function() {
+        tabPlanContent.style.display = 'none';
+        tabCustomContent.style.display = 'block';
+        tabCustomBtn.style.backgroundColor = '#2980b9';
+        tabCustomBtn.style.color = '#ffffff';
+        tabPlanBtn.style.backgroundColor = '#fdf3e7';
+        tabPlanBtn.style.color = '#8a6d3b';
+    };
+
     function initTimerApp() {
         const startTimeInput = document.getElementById('startTime');
+        const customEndTimeInput = document.getElementById('customEndTime');
         const calcBtn = document.getElementById('calcBtn');
-        if (!startTimeInput || !calcBtn) return;
+        const startCustomBtn = document.getElementById('startCustomBtn');
 
         const now = new Date();
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
         startTimeInput.value = hours + ':' + minutes;
 
-        let timerInterval = null;
+        // デフォルトの任意終了時刻を1時間後に設定
+        const defaultEnd = new Date(now.getTime() + 60 * 60000);
+        customEndTimeInput.value = String(defaultEnd.getHours()).padStart(2, '0') + ':' + String(defaultEnd.getMinutes()).padStart(2, '0');
+
         let hasAlerted10Min = false;
         let hasAlertedEnd = false;
 
-        calcBtn.onclick = function() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+        // 共通タイマー起動処理
+        function startTimerSequence(checkoutDateTime, displayElem, noticeElem, resultArea) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
 
-            const startTimeValue = startTimeInput.value;
-            if (!startTimeValue) {
-                alert('入室時間を設定してください。');
-                return;
-            }
-
-            const planVal = document.getElementById('planSelect').value.split('|');
-            const selectedMinutes = parseInt(planVal[0], 10);
-            const price = parseInt(planVal[1], 10);
-
-            const timeParts = startTimeValue.split(':');
-            const startHours = parseInt(timeParts[0], 10);
-            const startMins = parseInt(timeParts[1], 10);
-
-            const nowDate = new Date();
-            const startDateTime = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), startHours, startMins, 0);
-            const checkoutDateTime = new Date(startDateTime.getTime() + selectedMinutes * 60000);
-
-            const endHours = String(checkoutDateTime.getHours()).padStart(2, '0');
-            const endMins = String(checkoutDateTime.getMinutes()).padStart(2, '0');
-            
-            document.getElementById('checkoutTime').innerText = endHours + ':' + endMins;
-            document.getElementById('totalPrice').innerText = price.toLocaleString() + '円';
-            document.getElementById('resultArea').style.display = 'block';
+            resultArea.style.display = 'block';
 
             if (timerInterval) clearInterval(timerInterval);
             hasAlerted10Min = false;
@@ -238,14 +275,11 @@
                 const current = new Date();
                 const diffMs = checkoutDateTime - current;
 
-                const timerDisplay = document.getElementById('timerDisplay');
-                const alertNotice = document.getElementById('alertNotice');
-
                 if (diffMs <= 0) {
                     clearInterval(timerInterval);
-                    timerDisplay.innerText = "お時間となりました";
-                    timerDisplay.style.color = "#e67e22";
-                    alertNotice.style.display = "none";
+                    displayElem.innerText = "お時間となりました";
+                    displayElem.style.color = "#e67e22";
+                    noticeElem.style.display = "none";
 
                     if (!hasAlertedEnd) {
                         hasAlertedEnd = true;
@@ -258,24 +292,73 @@
                 const mins = Math.floor(totalSeconds / 60);
                 const secs = totalSeconds % 60;
 
-                timerDisplay.innerText = mins + '分' + String(secs).padStart(2, '0') + '秒';
+                displayElem.innerText = mins + '分' + String(secs).padStart(2, '0') + '秒';
 
                 if (totalSeconds <= 600) {
-                    timerDisplay.style.color = "#e67e22";
-                    alertNotice.style.display = "block";
+                    displayElem.style.color = "#e67e22";
+                    noticeElem.style.display = "block";
 
                     if (!hasAlerted10Min) {
                         hasAlerted10Min = true;
                         showAlarmModal('10min');
                     }
                 } else {
-                    timerDisplay.style.color = "#27ae60";
-                    alertNotice.style.display = "none";
+                    displayElem.style.color = "#27ae60";
+                    noticeElem.style.display = "none";
                 }
             }
 
             updateTimer();
             timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // プラン計算側ボタン
+        calcBtn.onclick = function() {
+            const startTimeValue = startTimeInput.value;
+            if (!startTimeValue) return alert('入室時間を設定してください。');
+
+            const planVal = document.getElementById('planSelect').value.split('|');
+            const selectedMinutes = parseInt(planVal[0], 10);
+            const price = parseInt(planVal[1], 10);
+
+            const timeParts = startTimeValue.split(':');
+            const nowDate = new Date();
+            const startDateTime = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), parseInt(timeParts[0], 10), parseInt(timeParts[1], 10), 0);
+            const checkoutDateTime = new Date(startDateTime.getTime() + selectedMinutes * 60000);
+
+            document.getElementById('checkoutTime').innerText = String(checkoutDateTime.getHours()).padStart(2, '0') + ':' + String(checkoutDateTime.getMinutes()).padStart(2, '0');
+            document.getElementById('totalPrice').innerText = price.toLocaleString() + '円';
+
+            startTimerSequence(
+                checkoutDateTime, 
+                document.getElementById('timerDisplayPlan'), 
+                document.getElementById('alertNoticePlan'), 
+                document.getElementById('resultAreaPlan')
+            );
+        };
+
+        // 任意時刻側ボタン
+        startCustomBtn.onclick = function() {
+            const customTimeVal = customEndTimeInput.value;
+            if (!customTimeVal) return alert('退室時間を設定してください。');
+
+            const timeParts = customTimeVal.split(':');
+            const nowDate = new Date();
+            let checkoutDateTime = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), parseInt(timeParts[0], 10), parseInt(timeParts[1], 10), 0);
+
+            // 設定時刻が現在より過去の場合、翌日の時刻と判断
+            if (checkoutDateTime <= nowDate) {
+                checkoutDateTime.setDate(checkoutDateTime.getDate() + 1);
+            }
+
+            document.getElementById('customTargetTimeDisplay').innerText = String(checkoutDateTime.getHours()).padStart(2, '0') + ':' + String(checkoutDateTime.getMinutes()).padStart(2, '0');
+
+            startTimerSequence(
+                checkoutDateTime, 
+                document.getElementById('timerDisplayCustom'), 
+                document.getElementById('alertNoticeCustom'), 
+                document.getElementById('resultAreaCustom')
+            );
         };
     }
 
